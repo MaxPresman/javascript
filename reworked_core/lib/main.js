@@ -15,8 +15,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
-console.log(networking);
-
 var NOW = 1,
     READY = false,
     READY_BUFFER = [],
@@ -998,7 +996,7 @@ function PN_API(setup) {
 
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-            networking.doWork({
+            networking.performHTTP({
                 callback: jsonp,
                 data: _get_url_params(data),
                 url: [STD_ORIGIN, 'time', jsonp],

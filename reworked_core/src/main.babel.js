@@ -1,8 +1,6 @@
 import {version} from '../package.json'
 import * as networking from './networking'
 
-console.log(networking);
-
 var NOW             = 1
     ,   READY           = false
     ,   READY_BUFFER    = []
@@ -1007,7 +1005,7 @@ export function PN_API(setup) {
 
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-            networking.doWork({
+            networking.performHTTP({
                 callback : jsonp,
                 data     : _get_url_params(data),
                 url      : [STD_ORIGIN, 'time', jsonp],
