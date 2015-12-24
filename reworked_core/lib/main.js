@@ -1,24 +1,200 @@
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.PN_API = PN_API;
+
 var _package = require('../package.json');
+
+var _networking = require('./networking');
+
+var networking = _interopRequireWildcard(_networking);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
-var NOW = 1;
-var READY = false;
-var READY_BUFFER = [];
-var PRESENCE_SUFFIX = '-pnpres';
-var DEF_WINDOWING = 10; // MILLISECONDS.
-var DEF_TIMEOUT = 10000; // MILLISECONDS.
-var DEF_SUB_TIMEOUT = 310; // SECONDS.
-var DEF_KEEPALIVE = 60; // SECONDS (FOR TIMESYNC).
-var SECOND = 1000; // A THOUSAND MILLISECONDS.
-var URLBIT = '/';
-var PARAMSBIT = '&';
-var PRESENCE_HB_THRESHOLD = 5;
-var PRESENCE_HB_DEFAULT = 30;
-var SDK_VER = _package.version;
-var REPL = /{([\w\-]+)}/g;
+console.log(networking);
+
+var NOW = 1,
+    READY = false,
+    READY_BUFFER = [],
+    PRESENCE_SUFFIX = '-pnpres',
+    DEF_WINDOWING = 10 // MILLISECONDS.
+,
+    DEF_TIMEOUT = 15000 // MILLISECONDS.
+,
+    DEF_SUB_TIMEOUT = 310 // SECONDS.
+,
+    DEF_KEEPALIVE = 60 // SECONDS (FOR TIMESYNC).
+,
+    SECOND = 1000 // A THOUSAND MILLISECONDS.
+,
+    PRESENCE_HB_THRESHOLD = 5,
+    PRESENCE_HB_DEFAULT = 30,
+    SDK_VER = _package.version,
+    REPL = /{([\w\-]+)}/g;
+
+/**
+ * UTILITIES
+ */
+function unique() {
+    return 'x' + ++NOW + '' + +new Date();
+}
+function rnow() {
+    return +new Date();
+}
+
+/**
+ * NEXTORIGIN
+ * ==========
+ * var next_origin = nextorigin();
+ */
+var nextorigin = (function () {
+    var max = 20,
+        ori = Math.floor(Math.random() * max);
+    return function (origin, failover) {
+        return origin.indexOf('pubsub.') > 0 && origin.replace('pubsub', 'ps' + (failover ? generate_uuid().split('-')[0] : ++ori < max ? ori : ori = 1)) || origin;
+    };
+})();
+
+/**
+ * Build Url
+ * =======
+ *
+ */
+function build_url(url_components, url_params) {
+    var url = url_components.join(URLBIT),
+        params = [];
+
+    if (!url_params) return url;
+
+    each(url_params, function (key, value) {
+        var value_str = (typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object' ? JSON['stringify'](value) : value;
+        typeof value != 'undefined' && value != null && encode(value_str).length > 0 && params.push(key + "=" + encode(value_str));
+    });
+
+    url += "?" + params.join(PARAMSBIT);
+    return url;
+}
+
+/**
+ * UPDATER
+ * =======
+ * var timestamp = unique();
+ */
+function updater(fun, rate) {
+    var timeout,
+        last = 0,
+        runnit = function runnit() {
+        if (last + rate > rnow()) {
+            clearTimeout(timeout);
+            timeout = setTimeout(runnit, rate);
+        } else {
+            last = rnow();
+            fun();
+        }
+    };
+
+    return runnit;
+}
+
+/**
+ * GREP
+ * ====
+ * var list = grep( [1,2,3], function(item) { return item % 2 } )
+ */
+function grep(list, fun) {
+    var fin = [];
+    each(list || [], function (l) {
+        fun(l) && fin.push(l);
+    });
+    return fin;
+}
+
+/**
+ * SUPPLANT
+ * ========
+ * var text = supplant( 'Hello {name}!', { name : 'John' } )
+ */
+function supplant(str, values) {
+    return str.replace(REPL, function (_, match) {
+        return values[match] || _;
+    });
+}
+
+/**
+ * timeout
+ * =======
+ * timeout( function(){}, 100 );
+ */
+function timeout(fun, wait) {
+    return setTimeout(fun, wait);
+}
+
+/**
+ * uuid
+ * ====
+ * var my_uuid = generate_uuid();
+ */
+function generate_uuid(callback) {
+    var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : r & 0x3 | 0x8;
+        return v.toString(16);
+    });
+    if (callback) callback(u);
+    return u;
+}
+
+function _isArray(arg) {
+    return !!arg && typeof arg !== 'string' && (Array.isArray && Array.isArray(arg) || typeof arg.length === "number");
+    //return !!arg && (Array.isArray && Array.isArray(arg) || typeof(arg.length) === "number")
+}
+
+/**
+ * EACH
+ * ====
+ * each( [1,2,3], function(item) { } )
+ */
+function each(o, f) {
+    if (!o || !f) return;
+
+    if (_isArray(o)) for (var i = 0, l = o.length; i < l;) {
+        f.call(o[i], o[i], i++);
+    } else for (var i in o) {
+        o.hasOwnProperty && o.hasOwnProperty(i) && f.call(o[i], i, o[i]);
+    }
+}
+
+/**
+ * MAP
+ * ===
+ * var list = map( [1,2,3], function(item) { return item + 1 } )
+ */
+function map(list, fun) {
+    var fin = [];
+    each(list || [], function (k, v) {
+        fin.push(fun(k, v));
+    });
+    return fin;
+}
+
+function pam_encode(str) {
+    return encodeURIComponent(str).replace(/[!'()*~]/g, function (c) {
+        return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+    });
+}
+
+/**
+ * ENCODE
+ * ======
+ * var encoded_data = encode('path');
+ */
+function encode(path) {
+    return encodeURIComponent(path);
+}
 
 /**
  * Generate Subscription Channel List
@@ -157,7 +333,6 @@ function PN_API(setup) {
         PRESENCE_HB_RUNNING = false,
         NO_WAIT_FOR_PENDING = setup['no_wait_for_pending'],
         COMPATIBLE_35 = setup['compatible_3.5'] || false,
-        xdr = setup['xdr'],
         params = setup['params'] || {},
         _error = setup['error'] || function () {},
         _is_online = setup['_is_online'] || function () {
@@ -434,7 +609,6 @@ function PN_API(setup) {
 
             xdr({
                 blocking: blocking || SSL,
-                timeout: 2000,
                 callback: jsonp,
                 data: params,
                 success: function success(response) {
@@ -487,7 +661,6 @@ function PN_API(setup) {
 
             xdr({
                 blocking: blocking || SSL,
-                timeout: 5000,
                 callback: jsonp,
                 data: params,
                 success: function success(response) {
@@ -601,7 +774,7 @@ function PN_API(setup) {
             }
 
             if (channels) {
-                if (isArray(channels)) {
+                if (_isArray(channels)) {
                     channels = channels.join(',');
                 }
                 data[mode] = channels;
@@ -825,10 +998,9 @@ function PN_API(setup) {
 
             if (USE_INSTANCEID) data['instanceid'] = INSTANCEID;
 
-            xdr({
+            networking.doWork({
                 callback: jsonp,
                 data: _get_url_params(data),
-                timeout: SECOND * 5,
                 url: [STD_ORIGIN, 'time', jsonp],
                 success: function success(response) {
                     callback(response[0]);
@@ -886,7 +1058,6 @@ function PN_API(setup) {
             // Queue Message Send
             PUB_QUEUE[add_msg]({
                 callback: jsonp,
-                timeout: SECOND * 5,
                 url: url,
                 data: _get_url_params(params),
                 fail: function fail(response) {
@@ -1527,10 +1698,10 @@ function PN_API(setup) {
             if (args['manage']) {
                 data['m'] = m;
             }
-            if (isArray(channel)) {
+            if (_isArray(channel)) {
                 channel = channel['join'](',');
             }
-            if (isArray(auth_key)) {
+            if (_isArray(auth_key)) {
                 auth_key = auth_key['join'](',');
             }
             if (typeof channel != 'undefined' && channel != null && channel.length > 0) data['channel'] = channel;
@@ -1709,19 +1880,9 @@ function PN_API(setup) {
         'get_uuid': function get_uuid() {
             return UUID;
         },
-        'isArray': (function (_isArray) {
-            function isArray(_x) {
-                return _isArray.apply(this, arguments);
-            }
-
-            isArray.toString = function () {
-                return _isArray.toString();
-            };
-
-            return isArray;
-        })(function (arg) {
-            return isArray(arg);
-        }),
+        'isArray': function isArray(arg) {
+            return _isArray(arg);
+        },
         'get_subscibed_channels': function get_subscibed_channels() {
             return generate_channel_list(CHANNELS, true);
         },
@@ -1751,7 +1912,6 @@ function PN_API(setup) {
             xdr({
                 callback: jsonp,
                 data: _get_url_params(data),
-                timeout: SECOND * 5,
                 url: [STD_ORIGIN, 'v2', 'presence', 'sub-key', SUBSCRIBE_KEY, 'channel', channels, 'heartbeat'],
                 success: function success(response) {
                     _invoke_callback(response, callback, err);
@@ -1772,7 +1932,6 @@ function PN_API(setup) {
         },
 
         // Expose PUBNUB Functions
-        'xdr': xdr,
         'ready': ready,
         'db': db,
         'uuid': generate_uuid,
