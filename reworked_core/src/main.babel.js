@@ -12,7 +12,11 @@ export class PubNub {
 
         //initialize dependent services.
         this.networking = new Networking({UUID});
-        this.heartbeat = new HeartBeat({networking: this.networking});
+        this.heartbeat = new HeartBeat({
+            networking: this.networking,
+            onConnect: this.onConnection,
+            onDisconnect: this.onDisconnect
+        });
 
         console.log("helllllooo");
     }
