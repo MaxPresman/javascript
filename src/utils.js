@@ -86,8 +86,56 @@ export function sugarTimeout(fun, wait) {
   return setTimeout(fun, wait);
 }
 
+export function pamEncode(str) {
+  return encodeURIComponent(str).replace(/[!'()*~]/g, (c) => {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
 
-/* TODO: i have no idea what this function does */
+/* TODO: side-effects on the params coming from pubnub-common */
+export function _getUrlParams(params, data) {
+  // if (!data) data = {};
+
+  _each(params, (key, value) => {
+    if (!(key in data)) {
+      data[key] = value;
+    }
+  });
+
+  return data;
+}
+
+export function _objectToKeyList(o) {
+  let l = [];
+
+  _each(o, (key) => {
+    l.push(key);
+  });
+
+  return l;
+}
+
+export function _objectToKeyListSorted(o) {
+  return _objectToKeyList(o).sort();
+}
+
+export function _getPamSignInputFromParams(params) {
+  let si = '';
+  let l = _objectToKeyListSorted(params);
+
+  _each(l, (i) => {
+    let k = l[i];
+    si += k + '=' + pamEncode(params[k]);
+    if (i !== l.length - 1) {
+      si += '&';
+    }
+  });
+
+  return si;
+}
+
+
+/* TODO: i have no idea what those function does */
 export function nextOrigin(origin, failOver) {
   // do not operate on non pubsub domains
   if (origin.indexOf('pubsub.') < 0) {
@@ -113,8 +161,4 @@ export function nextOrigin(origin, failOver) {
   return origin.replace('pubsub', 'ps' + selectedOrigin);
 }
 
-export function pamEncode(str) {
-  return encodeURIComponent(str).replace(/[!'()*~]/g, (c) => {
-    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-  });
-}
+/* end my TODO */

@@ -1,4 +1,4 @@
-import * as pubNubUtils from './utils';
+import * as pubNubUtils from './utils.js';
 import { version } from '../package.json';
 
 import _each from 'lodash/collection/forEach';
@@ -63,15 +63,17 @@ function generate_channel_group_list(channelGroups, nopresence) {
 }
 
 // PUBNUB READY TO CONNECT
-function ready() { timeout( function() {
+function ready() {
+  pubNubUtils.sugarTimeout(() => {
     if (READY) return;
     READY = 1;
-    each( READY_BUFFER, function(connect) { connect() } );
-}, SECOND ); }
+    _each(READY_BUFFER, (connect) => { connect(); });
+  }, SECOND);
+}
 
 
 function PN_API(setup) {
-    var SUB_WINDOWING =  +setup['windowing']   || DEF_WINDOWING
+    let SUB_WINDOWING = +setup['windowing']   || DEF_WINDOWING
     ,   SUB_TIMEOUT   = (+setup['timeout']     || DEF_SUB_TIMEOUT) * SECOND
     ,   KEEPALIVE     = (+setup['keepalive']   || DEF_KEEPALIVE)   * SECOND
     ,   TIME_CHECK    = setup['timecheck']     || 0
@@ -131,37 +133,6 @@ function PN_API(setup) {
             'encrypt' : function(a,key){ return a},
             'decrypt' : function(b,key){return b}
         };
-
-    function _get_url_params(data) {
-        if (!data) data = {};
-        each( params , function( key, value ) {
-            if (!(key in data)) data[key] = value;
-        });
-        return data;
-    }
-
-    function _object_to_key_list(o) {
-        var l = []
-        each( o , function( key, value ) {
-            l.push(key);
-        });
-        return l;
-    }
-    function _object_to_key_list_sorted(o) {
-        return _object_to_key_list(o).sort();
-    }
-
-    function _get_pam_sign_input_from_params(params) {
-        var si = "";
-        var l = _object_to_key_list_sorted(params);
-
-        for (var i in l) {
-            var k = l[i]
-            si += k + "=" + pam_encode(params[k]) ;
-            if (i != l.length - 1) si += "&"
-        }
-        return si;
-    }
 
     function validate_presence_heartbeat(heartbeat, cur_heartbeat, error) {
         var err = false;
