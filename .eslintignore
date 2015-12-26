@@ -1,0 +1,3 @@
+src/shims/**/*.js
+src/crypto/**/*.js
+src/external_js/**/*.js
