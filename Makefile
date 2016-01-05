@@ -17,3 +17,7 @@ test:
 	for dir in $(SUBDIRS); do \
 		$(MAKE) test -C $$dir; \
 	done 
+
+.PHONY: lint
+lint:
+	./node_modules/.bin/eslint core/pubnub-common.js
