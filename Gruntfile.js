@@ -9,7 +9,7 @@ module.exports = function (grunt) {
                     quiet: false
                 },
                 // NOTICE: ignore test2.js test due it's
-                src: ['node.js/tests/ssl_test.js', 'node.js/tests/test.js']
+                src: ['node.js/tests/ssl_test.js']
             },
             unit: 'karma.conf.js'
         },
@@ -25,6 +25,6 @@ module.exports = function (grunt) {
 
     grunt.registerTask('test', ["test:mocha"]);
     grunt.registerTask('test:mocha', ['mochaTest']);
-    // TODO: refactor unit testing 
+    // TODO: refactor unit testing
     // grunt.registerTask('test:unit', ['nodeunit']);
 };
