@@ -2258,8 +2258,7 @@ function xdr( setup ) {
             });
         });
         request.timeout = xhrtme;
-        request.on( 'error', function(err) {
-            console.log("deep err", err)
+        request.on( 'error', function() {
             done( 1, {"error": true, "message" : "Network Connection Error"} );
         } );
 

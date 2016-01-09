@@ -2,10 +2,10 @@ module.exports = function (grunt) {
     grunt.initConfig({
         env: {
             test_lockdown: {
-                "NOCK_BACK_MODE": "lockdown"
+                "VCR_MODE": "playback"
             },
             test_record: {
-                "NOCK_BACK_MODE": "record"
+                "VCR_MODE": "cache"
             }
         },
         pkg: grunt.file.readJSON('package.json'),
