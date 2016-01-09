@@ -1,5 +1,13 @@
 module.exports = function (grunt) {
     grunt.initConfig({
+        env: {
+            test_lockdown: {
+                "NOCK_BACK_MODE": "lockdown"
+            },
+            test_record: {
+                "NOCK_BACK_MODE": "record"
+            }
+        },
         pkg: grunt.file.readJSON('package.json'),
         mochaTest: {
             test: {
@@ -19,11 +27,13 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.loadNpmTasks('grunt-env');
     grunt.loadNpmTasks('grunt-mocha-test');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-contrib-clean');
 
-    grunt.registerTask('test', ["test:mocha"]);
+    grunt.registerTask('test', ['env:test_lockdown', "test:mocha"]);
+    grunt.registerTask('test-record', ['env:test_record', "test:mocha"]);
     grunt.registerTask('test:mocha', ['mochaTest']);
     // TODO: refactor unit testing
     // grunt.registerTask('test:unit', ['nodeunit']);
