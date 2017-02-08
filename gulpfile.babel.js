@@ -41,7 +41,7 @@ gulp.task('compile_web', () => {
 
 gulp.task('create_version', () => {
   return gulp.src('dist/web/pubnub.js')
-    .pipe(rename('pubnub.' + packageJSON.version + '.js'))
+    .pipe(rename(`pubnub.${packageJSON.version}.js`))
     .pipe(gulp.dest('upload/normal'));
 });
 
@@ -58,7 +58,7 @@ gulp.task('uglify', () => {
     .pipe(rename('pubnub.min.js'))
     .pipe(gulp.dest('dist/web'))
 
-    .pipe(rename('pubnub.' + packageJSON.version + '.min.js'))
+    .pipe(rename(`pubnub.${packageJSON.version}.min.js`))
     .pipe(gulp.dest('upload/normal'));
 });
 

@@ -1,7 +1,8 @@
-var webpack = require('webpack');
-var StatsPlugin = require('stats-webpack-plugin');
+let webpack = require('webpack');
+let StatsPlugin = require('stats-webpack-plugin');
+let packageJson = require('./package.json');
 
-var config = {
+let config = {
   module: {
     loaders: [
       { test: /\.json/, loader: 'json' },
@@ -20,12 +21,12 @@ var config = {
     libraryTarget: 'umd',
   },
   plugins: [
-    new webpack.BannerPlugin(require('./package.json').version + ' / Consumer ', {
+    new webpack.BannerPlugin(`${packageJson.version} / Consumer `, {
       raw: false, entryOnly: true,
     }),
     new StatsPlugin('stats.json', {
       chunkModules: true,
-      exclude: [/node_modules[\\\/]react/]
+      exclude: ['node_modules']
     })
   ],
   externals: [],
