@@ -20,4 +20,4 @@ script:
 after_success:
   - npm install codecov codacy-coverage
   - npm run codecov
-  - cat ./coverage/lcov.info | node_modules/.bin/codacy-coverage -p .
+  - cat ./coverage/lcov.info | node_modules/.bin/codacy-coverage
